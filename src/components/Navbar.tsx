@@ -2,54 +2,109 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
-const links = [
+const nav = [
   { href: "/", label: "Home" },
-  { href: "/forms", label: "Forms" },
-  { href: "/gallery", label: "Gallery" },
-  { href: "/fathers", label: "Church Fathers" },
-  { href: "/live", label: "Live" },
-  { href: "/volunteer", label: "Volunteer" },
-  { href: "/contact", label: "Contact" },
   { href: "/about", label: "About" },
+  { href: "/gallery", label: "Gallery" },
+  { href: "/live", label: "Live" },
+  { href: "/other-resources", label: "Other Resources" },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
 
+  const tabBase =
+    "text-lg font-bold tracking-wide px-4 py-2 rounded-xl transition whitespace-nowrap";
+  const tabActive = "bg-gray-200 shadow-md dark:bg-gray-800";
+  const tabInactive = "hover:bg-gray-100 dark:hover:bg-gray-700";
+
+  const isMemberActive = pathname === "/member";
+
+  // Dark mode state
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains("dark");
+    setDark(isDark);
+  }, []);
+
+  const toggleDark = () => {
+    document.documentElement.classList.toggle("dark");
+    setDark((v) => !v);
+  };
+
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/70">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+    <header className="sticky top-0 z-50 border-b bg-white dark:bg-black transition">
+      {/* FULL WIDTH header row */}
+      <div className="w-full px-6 py-4">
+        {/* relative so right controls can be pinned to screen edge */}
+        <div className="relative flex items-center justify-center">
+          {/* CENTER NAV (constrained width, centered) */}
+          <nav className="flex items-center justify-center gap-10 whitespace-nowrap">
+            {nav.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`${tabBase} ${active ? tabActive : tabInactive}`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
 
-        {/* Logo */}
-        <Link
-          href="/"
-          className="font-semibold tracking-tight text-zinc-900 dark:text-zinc-100"
-        >
-          Mekane Birhan
-        </Link>
-
-        {/* Navigation */}
-        <nav className="hidden items-center gap-4 text-sm md:flex">
-          {links.map((l) => {
-            const isActive = pathname === l.href;
-
-            return (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={`px-3 py-1.5 rounded-md transition-all duration-200
-                  ${
-                    isActive
-                      ? "bg-zinc-200 text-zinc-900 dark:bg-zinc-800 dark:text-white"
-                      : "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
+            {/* Member Portal */}
+            <SignedOut>
+              <SignInButton mode="modal" forceRedirectUrl="/member">
+                <button
+                  className={`${tabBase} ${
+                    isMemberActive ? tabActive : tabInactive
                   }`}
+                >
+                  Member Portal
+                </button>
+              </SignInButton>
+            </SignedOut>
+
+            <SignedIn>
+              <Link
+                href="/member"
+                className={`${tabBase} ${
+                  isMemberActive ? tabActive : tabInactive
+                }`}
               >
-                {l.label}
+                Member Portal
               </Link>
-            );
-          })}
-        </nav>
+            </SignedIn>
+          </nav>
+
+          {/* FAR RIGHT controls pinned to the browser edge */}
+          <div className="absolute right-0 flex items-center gap-4 whitespace-nowrap">
+            {/* Language button (placeholder) */}
+            <button className={`${tabBase} ${tabInactive}`}>🌐 Language</button>
+
+            {/* Dark mode toggle */}
+            <button
+              onClick={toggleDark}
+              aria-label="Toggle dark mode"
+              className="relative h-7 w-14 rounded-full bg-gray-300 dark:bg-gray-700 transition"
+            >
+              <span
+                className={`absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow-md transition-transform ${
+                  dark ? "translate-x-7" : ""
+                }`}
+              />
+            </button>
+
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+          </div>
+        </div>
       </div>
     </header>
   );
