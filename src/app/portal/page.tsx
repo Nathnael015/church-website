@@ -3,8 +3,9 @@ export const dynamic = "force-dynamic";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-export default function PortalPage() {
-  const { userId } = auth();
+export default async function PortalPage() {
+  const { userId } = await auth();
+
   if (!userId) redirect("/sign-in");
 
   return (
